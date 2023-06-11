@@ -1,5 +1,5 @@
 <template>
-  <br>
+  <!-- <br>
   <div :class="color" :title="title">{{ name }}</div>
   <button class="btn btn-dark" @click="decrement" :disabled="decDis">
     <strong>-</strong>
@@ -8,8 +8,22 @@
   <button class="btn btn-dark" @click="increment" :disabled="incDis">
     <strong>+</strong>
   </button>
-  <br>
-  <br>
+  <br> -->
+ <div align="center">
+    <Comp btnClass="btn btn-info">
+      <template #head> 
+        <h4>Header</h4>
+      </template>
+        Body
+      <template #foot> 
+        <h5>Footer</h5>
+      </template>
+    </Comp>
+    <button @click="click('say hello!')">Click Me!</button>
+    <input type="text" v-model="name">
+    {{ nameLength }}
+ </div>
+  <!-- <br>
   <table class="table table-bordered table-hover">
       <thead>
         <tr>
@@ -53,16 +67,29 @@
                 </td>
             </tr>
       </tbody>
-      <tfoot>
-        <td></td>
-        <td></td>
-        <td><button @click="handleFormSubmission">Submit</button></td>
-        <td></td>
+      <tfoot class="bg-primary
+      ">
+        <td colspan="4" class="text-center"><button @click="handleFormSubmission" class="btn btn-primary">Submit</button></td>
       </tfoot>
-    </table>
+    </table> -->
 </template>
 <script>    
+import Comp from '../components/Comp1.vue';
+import Mixins from '../Mixins';
   export default{
+    provide:{
+      btnClass: 'btn btn-danger',
+      handleClick: ()=> alert("OK"),
+    },
+    mixins: [Mixins],
+    components: {
+      Comp,
+    },
+    computed:{
+      nameLength(){
+        return this.name.length;
+      }
+    },  
     data(){
     return {
       name: 'Md Anwar Hossain',
@@ -170,14 +197,17 @@
       {
         console.log(this.newItem);
       }
+    },
+    add(text){
+      alert(text);
     }
 
   }
   }
 </script>  
 <style scoped>
-button:disabled {
-  cursor: not-allowed;
-  pointer-events: all !important;
-}
+  button:disabled {
+    cursor: not-allowed;
+    pointer-events: all !important;
+  }
 </style>
