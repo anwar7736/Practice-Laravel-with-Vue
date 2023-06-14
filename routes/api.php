@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Auth\ProductController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -15,11 +15,17 @@ Route::prefix('v1')->group(function(){
 
         Route::post('register', 'register');
 
+        Route::post('password-reset-email', 'sendPasswordResetLink');
+
+        Route::post('password-update', 'updatePassword');
+
         Route::middleware('auth:api')->group(function(){
 
             Route::post('update-profile/{id}', 'updateProfile');
 
             Route::post('logout', 'logout');
+
+            Route::apiResource('product', ProductController::class)->except(['create', 'edit']);
 
         });
 

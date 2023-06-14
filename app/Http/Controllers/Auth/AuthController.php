@@ -4,12 +4,16 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Notifications\ForgetPassword;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use App\Utils\Util;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
+use Lcobucci\JWT\Validation\Constraint\ValidAt;
 
 class AuthController extends Controller
 {
@@ -150,6 +154,106 @@ class AuthController extends Controller
         $data['user'] = $user;
         
         return response()->json($data, 200);
+    }
+
+    public function sendPasswordResetLink(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => ['required', 'exists:users'],
+        ], [
+            'email.required' => 'This field is required!',
+            'email.exists' => 'Email address not exists in our database!',
+        ]);
+
+        if($validator->fails())
+        {
+            return response()->json([
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user = User::whereEmail($request->email)->first();
+        $token = Str::random(50);
+        try{
+            DB::table('password_resets')->insert([
+                'email' => $user->email,
+                'token' => $token,
+                'created_at' => now()->addHours(2),
+            ]);
+            
+            Notification::send(
+                                $user, 
+                                new ForgetPassword(
+                                        $user->name, 
+                                        $user->email, 
+                                        $token, 
+                                ));
+
+            return response()->json([
+                'status' => 200,
+                'message' => 'Password reset link has been sent!',
+            ], 200);
+        }
+        catch(\Exception $e)
+        {
+            return response()->json([
+                'status' => 421,
+                'message' => $e->getMessage(),
+            ], 421);
+        }
+
+
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'password' => ['required', 'confirmed', 'min:4'],
+            'token' => ['required', 'exists:password_resets'],
+            'email' => ['required', 'exists:users'],
+        ], [
+            '*.required' => 'This field is required!',
+            'email.exists' => 'Email address not exists in our database!',
+            'token.exists' => 'This token not exists in our database!',
+        ]);
+
+        if($validator->fails())
+        {
+            return response()->json([
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $isValid = DB::table('password_resets')->where([
+                        'email' => $request->email,
+                        'token' => $request->token,
+                    ])
+                    ->where('created_at', '>', now())
+                    ->first();
+
+        if(!$isValid)
+        {
+            $data['invalid'] = "This token already expired!";
+            return response()->json([
+                'errors' => $data,
+            ], 422);
+        }
+
+        $isUpdated = User::whereEmail($request->email)->update([
+            'password' => bcrypt($request->password),
+        ]);
+
+        if($isUpdated)
+        {
+            DB::table('password_resets')->whereEmail($request->email,)->delete();
+
+            return response()->json([
+                'status' => 200,
+                'message' => 'Your password has been updated!'
+            ], 200);
+        }
+
+
     }
 
     public function generateAccessToken($user)
