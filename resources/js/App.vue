@@ -1,36 +1,23 @@
 <template>
   <div class="container">
-    <ul>
-      <li>
-        <RouterLink :to="{name: 'Home'}">Home</RouterLink>
-      </li>
-      <li>
-        <RouterLink :to="{name: 'About'}">About</RouterLink>
-      </li>
-      <li>
-        <RouterLink :to="{name: 'Contact'}">Contact</RouterLink>
-      </li>
-    </ul>
-    <button class="btn btn-info" @click="gotoHome">Go to Home</button>
+    <Header/>
+    <Sidebar/>
     <RouterView/>
+    <Footer/>
   </div>
 </template>
 
-<script setup>
-import {useRouter, useRoute} from 'vue-router';
-const router = useRouter();
-const route = useRoute();
-      function gotoHome(){
-       router.push({
-        name: 'Home',
-        query: {
-          name: 'Anwar',
-          age: 26
-        }
-       });
-      
-    }
-  
+<script>
+  import Header from './components/partials/Header';
+  import Sidebar from './components/partials/Sidebar';
+  import Footer from './components/partials/Footer';
+ export default{
+  components: {
+    Header,
+    Sidebar,
+    Footer
+  }
+ }
 </script>
 
 <style>
